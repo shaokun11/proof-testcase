@@ -21,17 +21,11 @@ contract MerkleClaim {
     }
 
     function claim(uint256 index, bytes32[] calldata merkleProof) external {
-        uint i = 0 ;
-        while(i < 100) {
-            bytes32 leaf = keccak256(
-                        abi.encodePacked(msg.sender, index)
-                    );
-            require(
-                MerkleProof.verify(merkleProof, merkleRoot, leaf),
-                "Invalid proof"
-            );
-            i++;
-        }
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender, index));
+        require(
+            MerkleProof.verify(merkleProof, merkleRoot, leaf),
+            "Invalid proof"
+        );
         claimed[msg.sender] += 1;
 
         emit Claimed(msg.sender, index, claimed[msg.sender]);
