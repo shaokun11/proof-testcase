@@ -77,14 +77,10 @@ async function main() {
         );
         const proof = tree.getHexProof(leaf);
         const mcWithWallet = mc.connect(wallets[i]);
-        let startNonce = await wallets[i].getNonce();
-        for (let j = 0; j < 100; j++) {
-            let tx = await mcWithWallet.claim(c.index, proof,{nonce: startNonce + j});
-            if (i + 1 === wallets.length && j + 1 === 100) {
-                await tx.wait();
-            }
+        let tx = await mcWithWallet.claim(c.index, proof);
+        if (i + 1 === wallets.length && j + 1 === 100) {
+            await tx.wait();
         }
-
     }
     block = await sender.provider!.getBlockNumber();
     console.log("claim block number is:", block);
