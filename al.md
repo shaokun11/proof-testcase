@@ -41,6 +41,7 @@ aleth config -e
 > paylaod could get from alitus-payload.zip
 
 ```bash
+unzip alitus-payload.zip
 aleth block submit-blocks -d payload -f 1 -t 4 
 ```
 
