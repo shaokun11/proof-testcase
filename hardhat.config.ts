@@ -22,7 +22,7 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
-    altius: {
+    local: {
       type: "http",
       chainType: "l1",
       url: "http://localhost:8545",
