@@ -3,6 +3,7 @@ import { network } from "hardhat";
 
 const net = process.env.NETWORK || "hardhat";
 const verifyIterateCount = parseInt(process.env.VERIFY_ITERATE_COUNT || "500");
+const txCount = parseInt(process.env.TX_COUNT || "10");
 const { ethers } = await network.connect({
     network: net,
 });
@@ -20,9 +21,31 @@ function makePackedInput() {
     );
 }
 
+async function faucet(arr: string[], amount: string) {
+    const bal = await sender.provider!.getBalance(sender.address);
+    console.log("sender balance is:", ethers.formatEther(bal));
+    const nonce = await sender.getNonce();
+    console.log("start faucet");
+    for (let i = 0; i < arr.length; i++) {
+        const tx = await sender.sendTransaction({
+            to: arr[i],
+            value: ethers.parseEther(amount),
+            nonce: nonce + i,
+        });
+        if (i + 1 === arr.length) {
+            await tx.wait();
+        }
+    }
+    console.log("faucet end");
+}
 
 async function main() {
-    console.log("network:", net, ",", "count:", verifyIterateCount);
+    const provider = ethers.provider!;
+    const wallets = Array.from({ length: txCount }, () =>
+        ethers.Wallet.createRandom().connect(provider)
+    );
+    await faucet(wallets.map((w) => w.address), '1.0');
+    console.log("network:", net, ",", "iterate count:", verifyIterateCount);
     const MockOk = await ethers.getContractFactory("MockKZGPrecompile");
     const mockOk = await MockOk.deploy();
     await mockOk.waitForDeployment();
@@ -32,12 +55,15 @@ async function main() {
     await verifier.waitForDeployment();
     console.log("deployed verifier at:", await verifier.getAddress());
     const inputs = [makePackedInput(), makePackedInput()];
-    const computeIterations = verifyIterateCount;
-    let block = await sender.provider!.getBlockNumber();
-    console.log("send tx previous block number is:", block);
-    const tx = await verifier.verifyBatchAndStress(inputs, computeIterations);
-    await tx.wait();
-    block = await sender.provider!.getBlockNumber();
+    for (let i = 0; i < wallets.length; i++) {
+        const mcWithWallet = verifier.connect(wallets[i]);
+        const computeIterations = verifyIterateCount;
+        const tx = await mcWithWallet.verifyBatchAndStress(inputs, computeIterations);
+        if (i + 1 === wallets.length) {
+            await tx.wait();
+        }
+    }
+    const block = await sender.provider!.getBlockNumber();
     console.log("send tx block number is:", block);
 }
 
