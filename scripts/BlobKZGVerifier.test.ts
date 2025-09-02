@@ -60,8 +60,8 @@ describe("BlobKZGVerifier", function () {
   it("verifyBatchAndStress emits event, updates slot, returns digest", async () => {
     const inputs = [makePackedInput(), makePackedInput()];
     const computeIterations = 500; // Reduce loops to avoid exceeding gas
-
-    const tx = await verifier.verifyBatchAndStress(inputs, computeIterations);
+    const key = ethers.id("parallel-key-" + 1);
+    const tx = await verifier.verifyBatchAndStress(inputs, computeIterations, key);
     const receipt = await tx.wait();
     // Directly query if storage update is effective
     // Event parsing differs across hardhat/ethers versions, avoid incompatibility

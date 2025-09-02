@@ -2,7 +2,7 @@ import "dotenv/config";
 import { network } from "hardhat";
 
 const net = process.env.NETWORK || "hardhat";
-const verifyIterateCount = parseInt(process.env.VERIFY_ITERATE_COUNT || "500");
+const verifyIterateCount = parseInt(process.env.VERIFY_ITERATE_COUNT || "1000");
 const txCount = parseInt(process.env.TX_COUNT || "10");
 const { ethers } = await network.connect({
     network: net,
@@ -58,7 +58,8 @@ async function main() {
     for (let i = 0; i < wallets.length; i++) {
         const mcWithWallet = verifier.connect(wallets[i]);
         const computeIterations = verifyIterateCount;
-        const tx = await mcWithWallet.verifyBatchAndStress(inputs, computeIterations);
+        const key = ethers.id("parallel-key-" + i);
+        const tx = await mcWithWallet.verifyBatchAndStress(inputs, computeIterations, key);
         if (i + 1 === wallets.length) {
             await tx.wait();
         }

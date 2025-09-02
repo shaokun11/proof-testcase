@@ -23,6 +23,7 @@ pragma solidity ^0.8.28;
  * Returns: Precompile returns 32 bytes, where value 1 indicates verification passed, 0 indicates failure.
  */
 contract BlobKZGVerifier {
+    mapping(bytes32 => bytes32) private runDigestByKey;
     // Single slot: Record the digest of the most recent batch verification + computation
     bytes32 private lastRunDigest;
     // KZG point evaluation target address (production can point to 0x0a; test can inject Mock address)
@@ -49,7 +50,7 @@ contract BlobKZGVerifier {
     /// @param packedInputs Each item is a packed input of length 192
     /// @param computeIterations Number of CPU-intensive iterations after each successful verification (can be used to adjust stress)
     /// @return digest Final digest obtained from this batch verification and computation
-    function verifyBatchAndStress(bytes[] calldata packedInputs, uint256 computeIterations) external returns (bytes32 digest) {
+    function verifyBatchAndStress(bytes[] calldata packedInputs, uint256 computeIterations, bytes32 key) external returns (bytes32 digest) {
         bytes32 localDigest = keccak256(abi.encodePacked(block.chainid, block.number, packedInputs.length, computeIterations));
 
         for (uint256 i = 0; i < packedInputs.length; i++) {
@@ -80,8 +81,7 @@ contract BlobKZGVerifier {
             localDigest = bytes32(accumulator);
         }
 
-        // Only this one sstore in the entire batch process, satisfying minimal slot writes
-        lastRunDigest = localDigest;
+        runDigestByKey[key] = localDigest;
         emit BatchVerified(packedInputs.length, localDigest);
         return localDigest;
     }
