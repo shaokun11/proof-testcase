@@ -78,7 +78,7 @@ async function main() {
         const proof = tree.getHexProof(leaf);
         const mcWithWallet = mc.connect(wallets[i]);
         let tx = await mcWithWallet.claim(c.index, proof);
-        if (i + 1 === wallets.length && j + 1 === 100) {
+        if (i + 1 === wallets.length) {
             await tx.wait();
         }
     }
