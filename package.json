@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "hardhat run scripts/start.ts"
+    "start": "hardhat run scripts/start.ts",
+    "start:verify": "hardhat run scripts/verifier.ts"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.0.1",
