@@ -50,7 +50,7 @@ async function main() {
         ethers.Wallet.createRandom().connect(provider)
     );
     await faucet(wallets.map((w) => w.address), '1.0');
-    console.log("network:", net, ",", "iterate count:", verifyIterateCount);
+    console.log("network:", net, "iterate count:", verifyIterateCount, "wallet count", wallets.length);
     const MockOk = await ethers.getContractFactory("MockKZGPrecompile");
     const mockOk = await MockOk.deploy();
     await mockOk.waitForDeployment();
