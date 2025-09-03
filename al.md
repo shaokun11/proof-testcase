@@ -15,7 +15,7 @@ cargo build --release altius-node
 >
 > jwt.hex you can generate by `openssl rand -hex 32`
 
-> set the env ENABLE_PARALLEL to true if you want to use parallel engine
+> set the env ENABLE_PARALLEL to true if you want to use parallel engine , every time you should clear the data dir
 
 ```bash
 export DATA_DIR=/home/ubuntu/datadir
