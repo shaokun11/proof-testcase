@@ -49,8 +49,8 @@ async function main() {
     const wallets = Array.from({ length: txCount }, () =>
         ethers.Wallet.createRandom().connect(provider)
     );
-    await faucet(wallets.map((w) => w.address), '1.0');
-    console.log("network:", net, "iterate count:", verifyIterateCount, "wallet count", wallets.length);
+    await faucet(wallets.map((w) => w.address), '10.0');
+    console.log("network:", net, "iterate count:", verifyIterateCount, "wallet count", wallets.length, "conflict rate:", conflictRate);
     const MockOk = await ethers.getContractFactory("MockKZGPrecompile");
     const mockOk = await MockOk.deploy();
     await mockOk.waitForDeployment();
@@ -78,16 +78,16 @@ async function main() {
     }
     let block = await sender.provider!.getBlockNumber();
     console.log("send conflict tx block number is:", block);
-    for (let i = 0; i < wallets.length; i++) {
-        const mcWithWallet = verifier.connect(wallets[i]);
-        const key = ethers.id("non-conflict-key" + i.toString());
-        const tx = await mcWithWallet.verifyBatchAndStress(inputs, verifyIterateCount, key);
-        if (i + 1 === wallets.length) {
-            await tx.wait();
-        }
-    }
-    block = await sender.provider!.getBlockNumber();
-    console.log("send no-conflict tx block number is:", block);
+    // for (let i = 0; i < wallets.length; i++) {
+    //     const mcWithWallet = verifier.connect(wallets[i]);
+    //     const key = ethers.id("non-conflict-key" + i.toString());
+    //     const tx = await mcWithWallet.verifyBatchAndStress(inputs, verifyIterateCount, key);
+    //     if (i + 1 === wallets.length) {
+    //         await tx.wait();
+    //     }
+    // }
+    // block = await sender.provider!.getBlockNumber();
+    // console.log("send no-conflict tx block number is:", block);
 }
 
 main().catch((error) => {
