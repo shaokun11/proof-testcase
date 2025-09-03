@@ -3,7 +3,12 @@ import { network } from "hardhat";
 
 const net = process.env.NETWORK || "hardhat";
 const verifyIterateCount = parseInt(process.env.VERIFY_ITERATE_COUNT || "1000");
-const txCount = parseInt(process.env.TX_COUNT || "10");
+let txCount = parseInt(process.env.TX_COUNT || "10");
+if (verifyIterateCount === 1000 && txCount > 854) {
+    // when the verifyIterateCount is 1000 , the block could include up to 854 transactions
+    txCount = 854;
+}
+const conflictRate = parseFloat(process.env.CONFLICT_RATE || "0");
 const { ethers } = await network.connect({
     network: net,
 });
@@ -54,18 +59,35 @@ async function main() {
     const verifier = await Verifier.deploy(await mockOk.getAddress());
     await verifier.waitForDeployment();
     console.log("deployed verifier at:", await verifier.getAddress());
+
+    const conflictN = Math.floor(txCount * conflictRate);
+    const conflictKeys = wallets.map((w, i) => {
+        if (i < conflictN) {
+            return ethers.id("conflict-key")
+        }
+        return ethers.id("non-conflict-key" + i.toString());
+    });
     const inputs = [makePackedInput(), makePackedInput()];
     for (let i = 0; i < wallets.length; i++) {
         const mcWithWallet = verifier.connect(wallets[i]);
-        const computeIterations = verifyIterateCount;
-        const key = ethers.id("parallel-key-" + i);
-        const tx = await mcWithWallet.verifyBatchAndStress(inputs, computeIterations, key);
+        const key = conflictKeys[i];
+        const tx = await mcWithWallet.verifyBatchAndStress(inputs, verifyIterateCount, key);
         if (i + 1 === wallets.length) {
             await tx.wait();
         }
     }
-    const block = await sender.provider!.getBlockNumber();
-    console.log("send tx block number is:", block);
+    let block = await sender.provider!.getBlockNumber();
+    console.log("send conflict tx block number is:", block);
+    for (let i = 0; i < wallets.length; i++) {
+        const mcWithWallet = verifier.connect(wallets[i]);
+        const key = ethers.id("non-conflict-key" + i.toString());
+        const tx = await mcWithWallet.verifyBatchAndStress(inputs, verifyIterateCount, key);
+        if (i + 1 === wallets.length) {
+            await tx.wait();
+        }
+    }
+    block = await sender.provider!.getBlockNumber();
+    console.log("send no-conflict tx block number is:", block);
 }
 
 main().catch((error) => {
